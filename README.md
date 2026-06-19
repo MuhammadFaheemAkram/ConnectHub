@@ -178,6 +178,22 @@ Tests are organized by runtime and responsibility:
 
 See [docs/TESTING.md](docs/TESTING.md).
 
+## Learning Documentation
+
+- [Architecture guide](docs/ARCHITECTURE.md)
+- [Testing guide](docs/TESTING.md)
+- [Learning notes](docs/LEARNING_NOTES.md)
+- [Interview notes](docs/INTERVIEW_NOTES.md)
+- [API simulation](docs/API_SIMULATION.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Phase 1 summary](docs/PHASE_1_SUMMARY.md)
+- [Phase 2 summary](docs/PHASE_2_SUMMARY.md)
+- [Phase 3 summary](docs/PHASE_3_SUMMARY.md)
+- [Phase 4 summary](docs/PHASE_4_SUMMARY.md)
+- [Phase 5 summary](docs/PHASE_5_SUMMARY.md)
+- [Phase 6 summary](docs/PHASE_6_SUMMARY.md)
+- [Phase 7 summary](docs/PHASE_7_SUMMARY.md)
+
 ## Screenshots
 
 Screenshot placeholders live in [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md). Add images there when publishing the repository.

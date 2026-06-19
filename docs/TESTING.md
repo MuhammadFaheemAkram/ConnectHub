@@ -1,19 +1,41 @@
 # Testing
 
-ConnectHub uses focused tests that match the app architecture.
+ConnectHub uses local JVM tests for fast logic feedback and Android instrumented tests for Room and Compose behavior.
+
+## Test Source Sets
+
+```text
+app/src/test/         JVM unit tests
+app/src/androidTest/  Android instrumented, Room, and Compose UI tests
+```
+
+## Current Dependencies
+
+- JUnit 4
+- Kotlin Coroutines Test
+- AndroidX Test JUnit
+- Espresso core
+- Compose UI test JUnit 4
+- In-memory Room databases for DAO tests
+
+Turbine and MockK are not currently configured. Flow tests use coroutine test utilities and purpose-built fake repositories.
 
 ## Unit Tests
 
-Unit tests live in `app/src/test`.
+Unit tests validate logic without an emulator.
 
-They cover:
+Current coverage includes:
 
-- Auth validation
-- Use cases
-- Repository logic where practical
-- ViewModels
-- Fake repository behavior
-- DataStore-backed settings repository
+- Login and sign-up validation
+- Login, sign-up, splash, and session ViewModels
+- Feed use cases, repository behavior, loading, error, like, and bookmark state
+- Create-post and add-comment use cases
+- Post detail, comments, and create-post ViewModels
+- Search debounce and recent searches
+- Bookmarks, profile, and edit-profile ViewModels
+- Chat list and chat detail ViewModels
+- Notifications and settings ViewModels
+- DataStore-backed `SettingsRepositoryImpl`
 
 Run:
 
@@ -23,55 +45,63 @@ Run:
 
 ## ViewModel Tests
 
-ViewModel tests use fake repositories and `MainDispatcherRule` so coroutine work runs deterministically. ViewModels are tested through public functions and exposed UI state.
+ViewModel tests replace repository interfaces with deterministic fakes. `MainDispatcherRule` replaces `Dispatchers.Main` with a test dispatcher.
 
-Covered examples:
+Typical pattern:
 
-- Login and sign up
-- Splash/session routing
-- Feed loading, error, like, and bookmark behavior
-- Post detail and comments
-- Create post
-- Search debounce
-- Bookmarks
-- Profile and edit profile
-- Chat list and chat detail
-- Notifications
-- Settings
+```text
+Create fake repository
+  -> construct use cases
+  -> construct ViewModel
+  -> call a public intent function
+  -> advance test scheduler
+  -> assert UI StateFlow or one-time effect
+```
+
+This verifies the ViewModel contract without Compose or Android framework rendering.
+
+## Repository And Use Case Tests
+
+Use-case tests verify delegation and small input rules, such as trimming post, comment, search, or message text.
+
+`FeedRepositoryImplTest` uses fake API and DAO implementations to verify cache writes and local like/bookmark state. `SettingsRepositoryImplTest` uses a real temporary Preferences DataStore file.
 
 ## Flow Tests
 
-Flow behavior is tested by collecting emitted state in coroutine tests. Current tests use Kotlin Coroutines Test and fake repositories. Turbine can be added later if flows become more complex or need richer emission assertions.
+Flow behavior is exercised through `runTest`, StateFlow fakes, `first`, and virtual time.
 
-Covered flows include:
+Examples:
 
-- Feed observation
-- Bookmarks observation
-- Settings observation
-- Message observation
-- Recent searches
+- Search waits for its debounce before querying.
+- Room-backed fake repositories update ViewModel state after mutations.
+- Settings updates are observed after DataStore writes.
+- Message lists update after send/reply behavior.
+
+Turbine would be a useful future addition for asserting longer emission sequences.
 
 ## Room Tests
 
-Room DAO tests live in `app/src/androidTest`.
+DAO tests create `ConnectHubDatabase` with `Room.inMemoryDatabaseBuilder`.
 
-They use an in-memory Room database and cover:
+Current DAO tests cover:
 
-- Insert/read posts
-- Bookmark/unbookmark
-- Comments insert/read/delete-own behavior
-- Recent searches
-- Profile persistence
-- Conversations and messages
-- Notifications read/unread state
+- Insert/read cached posts
+- Bookmark and unbookmark
+- Search posts and filter by author
+- Insert/read comments and delete only own comments
+- Insert/read/clear recent searches
+- Upsert and observe profile
+- Insert/read conversations and messages
+- Update conversation preview
+- Mark one or all notifications as read
 
-Build Android test APKs:
+Build the Android test APK:
 
 ```bash
 ./gradlew :app:assembleDebugAndroidTest
 ```
 
-Run with an emulator or device attached:
+Run on an attached emulator or device:
 
 ```bash
 ./gradlew :app:connectedDebugAndroidTest
@@ -79,32 +109,55 @@ Run with an emulator or device attached:
 
 ## Compose UI Tests
 
-Compose UI tests live in `app/src/androidTest`.
+Compose tests render stateless content Composables with explicit UI state.
 
-They cover:
+Current checks include:
 
-- Post detail content
-- Create post validation/display states
-- Chat detail message bubbles
-- Notification filters
-- Settings dark mode and dynamic color rows
+- Post detail displays content and comments preview
+- Create-post button enabled/disabled behavior
+- Chat detail displays message bubbles and input
+- Notification filters appear
+- Settings displays dark mode and dynamic color controls
 
-Run:
+The tests intentionally focus on screen contracts rather than recreating full end-to-end navigation.
+
+## Lint And Build Verification
+
+Build:
 
 ```bash
-./gradlew :app:connectedDebugAndroidTest
+./gradlew :app:assembleDebug
 ```
 
-## Suggested Pre-PR Check
+Lint:
+
+```bash
+./gradlew :app:lintDebug
+```
+
+The GitHub Actions workflow runs build, unit tests, and lint for pushes and pull requests targeting `main`.
+
+## Recommended Pre-Commit Sequence
 
 ```bash
 ./gradlew :app:assembleDebug
 ./gradlew :app:testDebugUnitTest
 ./gradlew :app:assembleDebugAndroidTest
+./gradlew :app:lintDebug
 ```
 
-With a device or emulator:
+With an emulator or device:
 
 ```bash
 ./gradlew :app:connectedDebugAndroidTest
 ```
+
+## Useful Tests To Add Next
+
+- Navigation tests for auth-to-main graph switching
+- Compose interactions for feed like/bookmark actions
+- Migration tests using exported Room schemas
+- Repository failure tests for chat and notifications
+- Accessibility semantics checks
+- Screenshot or visual regression tests
+- Turbine-based tests for exact Flow emission order

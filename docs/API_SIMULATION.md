@@ -79,7 +79,7 @@ Returns Like, Comment, Follow, and Mention notification DTOs.
 
 ```kotlin
 object FakeNetworkConfig {
-    const val defaultDelayMillis = 450L
+    const val defaultDelayMillis = 700L
     const val errorSimulationEnabled = false
 }
 ```

@@ -77,7 +77,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full architecture guide
 ## Package Structure
 
 ```text
-com.example.connecthub
+co.bitfuse.connecthub
 ├── ConnectHubApp.kt
 ├── MainActivity.kt
 ├── core
